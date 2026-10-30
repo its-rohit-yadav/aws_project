@@ -48,10 +48,4 @@ The `10.20.0.0/16` peering route is **more specific** than `0.0.0.0/0`, so the l
 
 Security groups are **stateful**, so no inbound rule is needed for replies. Network ACLs are left at the default allow-all (custom ACLs would also need return/ephemeral-port rules).
 
-## Design limits (by design)
 
-- Non-transitive: peering does not forward traffic to a third VPC.
-- No gateway/edge sharing: VPC B can't use VPC A's IGW.
-- Peering DNS resolution options are not changed; tests use private IPs directly.
-- Same account and Region. Cross-account / cross-Region peering are extension exercises.
-- No NAT gateway, so private hosts cannot install packages. A failed `dnf update` there does **not** mean peering is broken.
