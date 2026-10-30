@@ -92,30 +92,29 @@ Outbound is left at the default allow-all; security groups are stateful so repli
 
 ```bash
 git clone https://github.com/<you>/aws-vpc-peering-lab.git && cd aws-vpc-peering-lab
-nano config.env                       # set STUDENT_NAME, confirm Region/AZ
+nano config.env                       
 
 scripts/01-network.sh                 # VPCs, subnets, IGW, route tables + associations
 scripts/02-security-groups.sh         # 3 SGs with /32 rules
 scripts/03-compute.sh                 # key pair + bastion, App-A, App-B
 scripts/04-ssh-config.sh              # generates ssh/ssh_config (ProxyJump)
 
-ssh -F ssh/ssh_config ewb-bastion     # verify, then exit
+ssh -F ssh/ssh_config ewb-bastion     
 ssh -F ssh/ssh_config ewb-app-a       # works via VPC A's local route
 
-scripts/tests.sh baseline             # TEST 01: expect 100% packet loss (no peering yet)
+scripts/tests.sh baseline             
 
 scripts/05-peering.sh                 # request + accept -> Active
 scripts/tests.sh baseline             # optional: still fails - Active peering is NOT enough
 scripts/06-routes.sh                  # forward + return + public-subnet routes
 
-scripts/tests.sh all-after-routes     # TESTS 02-05 + route dump
+scripts/tests.sh all-after-routes     
 scripts/tests.sh failure              # controlled failure + recovery
 scripts/inventory.sh                  # resource table for your report
 
-scripts/99-cleanup.sh                 # tear down + verify (save evidence first!)
+scripts/99-cleanup.sh                 
 ```
 
-Every test writes real output to `evidence/logs/`. Prefer the console? Follow [docs/console-walkthrough.md](docs/console-walkthrough.md); the validation steps are identical.
 
 ## Test matrix (acceptance criteria)
 
@@ -130,19 +129,6 @@ Every test writes real output to `evidence/logs/`. Prefer the console? Follow [d
 
 Details and how to capture evidence: [docs/validation.md](docs/validation.md).
 
-## Results
-
-> **Replace this section with your own output.** Results must come from *your* AWS run; paste the log snippets from `evidence/logs/` and add screenshots to `evidence/screenshots/`.
-
-| Test | Result | Evidence |
-|---|---|---|
-| 01 Baseline | _pending_ | `evidence/logs/…01-baseline…` |
-| 02 Forward | _pending_ | |
-| 03 Reverse | _pending_ | |
-| 04 Private SSH | _pending_ | |
-| 05 Isolation | _pending_ | |
-| 06 Failure → recovery | _pending_ | |
-| Cleanup verified | _pending_ | |
 
 ## Repository layout
 
@@ -151,39 +137,19 @@ Details and how to capture evidence: [docs/validation.md](docs/validation.md).
 ├── README.md
 ├── config.env                  # all tunable values
 ├── docs/
-│   ├── architecture.md         # design + why every route / rule exists
+│   ├── architecture.md         
 │   ├── console-walkthrough.md  # same lab via the AWS Console
-│   ├── validation.md           # tests, expected output, controlled failure
+│   ├── validation.md           
 │   ├── troubleshooting.md
-│   ├── viva-qa.md              # model answers to the 4 viva questions
+│   ├── viva-qa.md              
 │   └── cleanup-and-cost.md
 ├── scripts/                    # AWS CLI automation (01..06, tests, inventory, 99-cleanup)
 ├── ssh/config.example
 └── evidence/
-    ├── REPORT_TEMPLATE.md      # fill in -> export to YourName_EWB_VPC_Peering.pdf
+    ├── REPORT_TEMPLATE.md      
     ├── logs/                   # created by scripts/tests.sh
     └── screenshots/
 ```
 
-## Key concepts
 
-- **Peering is the link; routes and security groups decide what uses it.** Active peering alone never makes ping or SSH work.
-- **Routes are needed in both directions.** Without the return route the reply has nowhere to go.
-- **Peering is one-to-one and non-transitive.** A–B plus A–C does not give B–C.
-- **No edge-to-edge routing.** VPC B cannot use VPC A's internet gateway over the peering connection.
-- **CIDRs must not overlap**, including secondary CIDRs. Different subnet ranges don't fix overlapping VPC ranges.
 
-## Security notes
-
-- Never commit `*.pem`, `state.env` or `ssh/ssh_config` (already in `.gitignore`). Never copy the private key to any EC2 instance.
-- Never open SSH or ICMP to `0.0.0.0/0`. Update the bastion rule if your public IP changes.
-- Instances enforce IMDSv2 (`HttpTokens=required`) and use small, delete-on-termination root volumes.
-- Before pushing evidence, scrub AWS account IDs, public IPs and anything you consider sensitive.
-
-## References (official AWS docs)
-
-- VPC peering concepts and limitations · Create a VPC peering connection · Update route tables for a VPC peering connection · Security groups for peered VPCs · Amazon EC2 key pair security · Amazon VPC pricing (search these titles on docs.aws.amazon.com)
-
-## License
-
-MIT, see [LICENSE](LICENSE).
